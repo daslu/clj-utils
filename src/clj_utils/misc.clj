@@ -141,18 +141,6 @@ Try this with diff, meld, ediff, etc. as the tool."
   (and (identity x)
        (not (Double/isNaN x))))
 
-(defn filter-complete-rows
-  "Given a dataset, leave only the rows all of whose elements are numbers."
-   [adataset]
-   (let [num-cols (count (col-names adataset))]
-     (->> adataset
-          :rows
-          (filter #(= (count %)
-                      num-cols))
-          (filter (comp (partial every? is-a-number) vals))
-          (dataset (col-names adataset))
-          ;; col-names are necessary here to keep the ordering of row columns.
-          )))
 
 (defn take-all-but
   "Take all elements of seqable x (of finite count) except for the last n elements."
@@ -297,3 +285,61 @@ For example: (concat-with-delimiter \",\" (range 3)) ==> \"0,1,2\""
              s2)))
 
 
+
+
+(defn leave-only-nil-and-values-of-set [vals-set]
+  (fn [x]
+    (if x (if (vals-set x)
+            x
+            ;; else
+            :other))))
+
+
+
+(defn and-func [x y]
+  (and x y))
+
+(defn filter-all-nonnil [adataset]
+  (to-dataset
+   (filter #(reduce and-func
+                    (vals %))
+           (:rows adataset))))
+
+
+(defn filter-full [adataset]
+  (to-dataset
+   (filter #(= (count %)
+               (ncol adataset))
+           (:rows adataset))))
+
+(defn filter-complete-rows
+  "Given a dataset, leave only the rows all of whose elements are numbers."
+   [adataset]
+   (let [num-cols (count (col-names adataset))]
+     (->> adataset
+          :rows
+          (filter #(= (count %)
+                      num-cols))
+          (filter (comp (partial every? is-a-number) vals))
+          (dataset (col-names adataset))
+          ;; col-names are necessary here to keep the ordering of row columns.
+          )))
+
+
+(defn transform-col-and-rename
+  " Apply function f & args to the specified column of dataset, replace the column
+  with the resulting new values, and rename it to new-column."
+  [dataset column new-column f & args]
+  (->> (map #(apply update-in % [column] f args) (:rows dataset))
+       vec
+       (assoc dataset :rows)
+       (#(col-names % (replace
+                       {column new-column}
+                       (:column-names dataset))))))
+
+(defn round [k]
+  (let [p (pow 10 k)]
+    (fn [x]
+      (float (/ (Math/round (* x
+                               p))
+                p)))))

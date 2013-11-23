@@ -1,5 +1,5 @@
 (ns ^{:doc "Visualization utility functions."}
-  clj-util.visual
+  clj-utils.visual
   (:use (incanter core stats datasets charts))
   (:import [org.jfree.chart ChartPanel JFreeChart])
   (:import [javax.swing JComponent JLabel JPanel])
