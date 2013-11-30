@@ -197,12 +197,15 @@ For example: (concat-with-delimiter \",\" (range 3)) ==> \"0,1,2\""
   (java.lang.Math/log (/ x y)))
 
 
-(defn nil-to-nan [x]
-  (if x x (Double/NaN)))
+(defn nil-to-val [val]
+  (fn [x]
+    (if x x val)))
 
-(defn nil-to-zero [x]
-  (if x x (Double/NaN)))
+(def nil-to-nan
+  (nil-to-val Double/NaN))
 
+(def nil-to-zero
+  (nil-to-val 0))
 
 (defn signum [x]
   (if (pos? x)
@@ -305,6 +308,14 @@ For example: (concat-with-delimiter \",\" (range 3)) ==> \"0,1,2\""
                     (vals %))
            (:rows adataset))))
 
+(defn filter-all-nonnil-and-nonNaN [adataset]
+  (to-dataset
+   (filter
+    (fn [row] (every? #(not (or (nil? %)
+                               (and (number? %)
+                                    (Double/isNaN %))))
+                     (vals row)))
+    (:rows adataset))))
 
 (defn filter-full [adataset]
   (to-dataset
