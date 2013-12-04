@@ -4,8 +4,7 @@
   (:require clojure.java.shell)
   (:require clj-time.core)
   (:require clj-time.coerce)
-  ;;(:require cemerick.pomegranate)
-  )
+  (:require [clojure.core.reducers :as r]))
 
 ;;;;
 ;; Parallelization with a fixed number of threads.
@@ -365,5 +364,114 @@ Note: same as (into [] coll), but parallel."
 
 
 
+(defn obj-to-keyword [obj]
+  (keyword (clojure.string/replace (str obj)
+                                   #"[,|{|}|:| ]"
+                                   "-")))
 
 
+
+(defn put-Latin-around-Hebrew
+  "Put Latin characters before and after a given Hebrew string s,
+to avoid some LTR/RTL problems in printing."
+  [s]
+  (if (re-matches #"(?s).*[אבגדהוזחטיכלמנסעפצקרשת].*" s)
+    (str "o " s " o")
+    s))
+
+
+
+
+(defn specific-val-to-1-others-to-0 [specific-val]
+  #(if (= specific-val %)
+     1 0))
+
+(defn specific-vals-to-1-others-to-0 [specific-vals-set]
+  #(if (specific-vals-set %)
+     1 0))
+
+(defn threshold-to-nil [threshold]
+  #(if (<= threshold %)
+     nil %))
+
+(defn parse-int-or-nil [string]
+  (try (Integer/parseInt string)
+       (catch NumberFormatException e
+         (do
+           ;; (println (str "warning: NumberFormatException "
+           ;;               (.getMessage e)
+           nil))))
+
+(def regular-int-or-nil (comp (threshold-to-nil 90)
+                              parse-int-or-nil))
+
+
+
+
+
+
+(defn order [values]
+  (map second
+       (sort-by first
+                (map vector
+                     values
+                     (range (count values))))))
+
+(defn uniformize [values]
+  (map /
+       (map inc
+            (order (order values)))
+       (repeat (inc (count values)))))
+
+
+(comment
+  (let [x (repeatedly 9 rand)]
+    (= (order x)
+       (order (uniformize x)))))
+
+
+(defn adapt-range [values]
+  (let [minval (apply min values)
+        maxval (apply max values)
+        spread (- maxval minval)]
+    (map #(/ (- % minval)
+             spread)
+         values)))
+
+(comment
+  (= [0 1/9 1]
+     (adapt-range [1 2 10])))
+
+
+
+(defn to-seq
+  "This function transforms returns a 1-element vector containing its input,
+ if necessary, to make its output sequential. If the input is already sequential, it is left as it is. 
+This kind of transformation is useful when handling some of the incinsistent outputs of incanter functions.
+For example:
+($ 0 (dataset [:a] [[1]])) returns a number,
+while 
+($ 0 (dataset [:a] [[1][2])) returns a sequence of numbers.
+Applying to-seq to the output will make sure that it is a sequence of numbers."
+  [val-or-vals]
+  (if (sequential? val-or-vals)
+    val-or-vals
+    [val-or-vals]))
+
+
+(defn careful-mean
+  "Given a constant min-n-samples, return a function
+which computes the mean of its input
+only if it has at least min-n-samples elements
+(and other wise returns nil)."
+  [min-n-samples]
+  (fn [number-or-numbers]
+    (if (number? number-or-numbers)
+      nil
+      (if (<= min-n-samples (count number-or-numbers))
+        (mean number-or-numbers)))))
+
+(comment
+  (nil? ((careful-mean 15) (range 9)))
+  (= 9.5 ((careful-mean 15) (range 20)))
+  )
