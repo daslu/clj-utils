@@ -354,3 +354,16 @@ For example: (concat-with-delimiter \",\" (range 3)) ==> \"0,1,2\""
       (float (/ (Math/round (* x
                                p))
                 p)))))
+
+
+
+;; http://www.thebusby.com/2012/07/tips-tricks-with-clojure-reducers.html
+(defn fold-into-vec [coll]
+  "Provided a reducer, concatenate into a vector.
+Note: same as (into [] coll), but parallel."
+  (r/fold (r/monoid into vector) conj coll))
+
+
+
+
+
