@@ -196,6 +196,22 @@ For example: (concat-with-delimiter \",\" (range 3)) ==> \"0,1,2\""
 (defn log-ratio [x y]
   (java.lang.Math/log (/ x y)))
 
+(defn careful-log-ratio
+  [x y]
+  (if (>= 0 (min x y))
+    Double/NaN
+    (log-ratio x y)))
+
+(defn logit
+  [x]
+  (- (log x)
+     (log (- 1 x))))
+
+(defn logits-difference
+  [x y]
+  (- (logit x)
+     (logit y)))
+
 
 (defn nil-to-val [val]
   (fn [x]
@@ -487,3 +503,9 @@ only if it has at least min-n-samples elements
           (dataset (col-names adataset))
           ;; col-names are necessary here to keep the ordering of row columns.
           )))
+
+
+(defn sort-colnames [adataset]
+  (dataset (sort (col-names adataset))
+           (:rows adataset)))
+
