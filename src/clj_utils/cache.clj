@@ -33,7 +33,3 @@
               (.printStackTrace e)))))))
 
 
-(def memoized-compute-and-save-or-load
-  (memoize compute-and-save-or-load))
-
-
