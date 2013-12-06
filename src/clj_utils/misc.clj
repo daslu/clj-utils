@@ -4,7 +4,8 @@
   (:require clojure.java.shell)
   (:require clj-time.core)
   (:require clj-time.coerce)
-  (:require [clojure.core.reducers :as r]))
+  (:require [clojure.core.reducers :as r])
+  (:use [clojure.algo.generic.functor :only [fmap]]))
 
 ;;;;
 ;; Parallelization with a fixed number of threads.
@@ -289,53 +290,6 @@ For example: (concat-with-delimiter \",\" (range 3)) ==> \"0,1,2\""
 
 
 
-(defn leave-only-nil-and-values-of-set [vals-set]
-  (fn [x]
-    (if x (if (vals-set x)
-            x
-            ;; else
-            :other))))
-
-
-
-(defn and-func [x y]
-  (and x y))
-
-(defn filter-all-nonnil [adataset]
-  (to-dataset
-   (filter #(reduce and-func
-                    (vals %))
-           (:rows adataset))))
-
-(defn filter-all-nonnil-and-nonNaN [adataset]
-  (to-dataset
-   (filter
-    (fn [row] (every? #(not (or (nil? %)
-                               (and (number? %)
-                                    (Double/isNaN %))))
-                     (vals row)))
-    (:rows adataset))))
-
-(defn filter-full [adataset]
-  (to-dataset
-   (filter #(= (count %)
-               (ncol adataset))
-           (:rows adataset))))
-
-(defn filter-complete-rows
-  "Given a dataset, leave only the rows all of whose elements are numbers."
-   [adataset]
-   (let [num-cols (count (col-names adataset))]
-     (->> adataset
-          :rows
-          (filter #(= (count %)
-                      num-cols))
-          (filter (comp (partial every? is-a-number) vals))
-          (dataset (col-names adataset))
-          ;; col-names are necessary here to keep the ordering of row columns.
-          )))
-
-
 (defn transform-col-and-rename
   " Apply function f & args to the specified column of dataset, replace the column
   with the resulting new values, and rename it to new-column."
@@ -475,3 +429,61 @@ only if it has at least min-n-samples elements
   (nil? ((careful-mean 15) (range 9)))
   (= 9.5 ((careful-mean 15) (range 20)))
   )
+
+
+
+
+
+
+
+
+
+(defn nil-to-nan-in-dataset-rows
+  [adataset]
+  (dataset (col-names adataset)
+           (map (fn [row]
+                  (fmap nil-to-nan
+                        row))
+                (:rows adataset))))
+
+(defn leave-only-nil-and-values-of-set [vals-set]
+  (fn [x]
+    (if x (if (vals-set x)
+            x
+            ;; else
+            :other))))
+
+(defn filter-all-nonnil [adataset]
+  (dataset
+   (col-names adataset)
+   (filter #(every? identity
+                    (vals %))
+           (:rows adataset))))
+
+(defn filter-all-nonnil-and-nonNaN [adataset]
+  (to-dataset
+   (filter
+    (fn [row] (every? #(not (or (nil? %)
+                               (and (number? %)
+                                    (Double/isNaN %))))
+                     (vals row)))
+    (:rows adataset))))
+
+(defn filter-full [adataset]
+  (to-dataset
+   (filter #(= (count %)
+               (ncol adataset))
+           (:rows adataset))))
+
+(defn filter-complete-rows
+  "Given a dataset, leave only the rows all of whose elements are numbers."
+   [adataset]
+   (let [num-cols (count (col-names adataset))]
+     (->> adataset
+          :rows
+          (filter #(= (count %)
+                      num-cols))
+          (filter (comp (partial every? is-a-number) vals))
+          (dataset (col-names adataset))
+          ;; col-names are necessary here to keep the ordering of row columns.
+          )))
