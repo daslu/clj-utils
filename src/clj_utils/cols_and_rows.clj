@@ -66,7 +66,10 @@ It is intended to serve as a (possibly) analog counterpart of Incanter's dataset
   (dataset (:column-names cols-and-rows)
            (:rows cols-and-rows)))
 
-
+(defn dataset-to-cols-and-rows
+  [adataset]
+  {:column-names (col-names adataset)
+   :rows (:rows adataset)})
 
 
 
