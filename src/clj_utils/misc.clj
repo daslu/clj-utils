@@ -372,13 +372,6 @@ to avoid some LTR/RTL problems in printing."
            ;;               (.getMessage e)
            nil))))
 
-(def regular-int-or-nil (comp (threshold-to-nil 90)
-                              parse-int-or-nil))
-
-
-
-
-
 
 (defn order [values]
   (map second
@@ -445,12 +438,6 @@ only if it has at least min-n-samples elements
   (nil? ((careful-mean 15) (range 9)))
   (= 9.5 ((careful-mean 15) (range 20)))
   )
-
-
-
-
-
-
 
 
 
