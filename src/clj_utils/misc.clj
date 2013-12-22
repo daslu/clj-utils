@@ -286,7 +286,7 @@ For example: (concat-with-delimiter \",\" (range 3)) ==> \"0,1,2\""
 (defn get-current-time-string []
   "Get time as a string suitable for filenames."
   (clojure.string/replace 
-                 (clj-time.coerce/to-string
+   (clj-time.coerce/to-string
                   (clj-time.core/now))
                  #":" ""))
 
@@ -496,3 +496,50 @@ only if it has at least min-n-samples elements
   (dataset (sort (col-names adataset))
            (:rows adataset)))
 
+
+
+
+(defn maps-KL-dist [ps qs]
+  (sum (for [k (keys ps)]
+         (let [p (ps k)
+               q (qs k)]
+           (* p (log (/ p q)))))))
+
+(comment
+  (maps-KL-dist {:a 0.4 :b 0.6}
+                {:a 0.3 :b 0.7}))
+
+(defn arrays-KL-dist [ps qs]
+  (sum (for [k (range (count ps))]
+         (let [p ^double (aget ps k)
+               q ^double (aget qs k)]
+           (* p (log (/ p q)))))))
+
+(comment
+  (arrays-KL-dist
+   (double-array [0.4 0.6])
+   (double-array [0.3 0.7])))
+
+
+
+(def chi-square-comparison
+  (let [chisq (org.apache.commons.math3.stat.inference.ChiSquareTest.)]
+    (fn [counts1 counts2]
+      (try (.chiSquareDataSetsComparison chisq
+                                         (long-array counts1)
+                                         (long-array counts2))
+           (catch Exception e 
+              (do 
+                (if e (do (
+                           ;;println ["chisq caught exception" e
+                           ;(.getMessage e)]
+                           
+                           ;;(print-stack-trace e) 
+                           Double/NaN)))))))))
+(comment
+  {:should-be-small (chi-square-comparison [9 33 23] [10 31 25])
+   :should-be-large (chi-square-comparison [9 33 23] [10 31 250])
+   :should-be-NaN(chi-square-comparison [9 0 23] [10 0 250])})
+
+
+;; (matrix-distances)
