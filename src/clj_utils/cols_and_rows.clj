@@ -71,7 +71,10 @@ It is intended to serve as a (possibly) analog counterpart of Incanter's dataset
   {:column-names (col-names adataset)
    :rows (:rows adataset)})
 
-
+(defn sort-column-names-of-cols-and-rows
+  [cols-and-rows]
+  (assoc cols-and-rows
+    :column-names (sort (:column-names cols-and-rows))))
 
 (defn add-linear-combination-column
   [coeff-map new-col-name cols-and-rows]

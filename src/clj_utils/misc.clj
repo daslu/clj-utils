@@ -5,7 +5,8 @@
   (:require clj-time.core)
   (:require clj-time.coerce)
   (:require [clojure.core.reducers :as r])
-  (:use [clojure.algo.generic.functor :only [fmap]]))
+  (:use [clojure.algo.generic.functor :only [fmap]])
+  (:use [clj-ml data clusterers]))
 
 ;;;;
 ;; Parallelization with a fixed number of threads.
@@ -406,6 +407,19 @@ to avoid some LTR/RTL problems in printing."
      (adapt-range [1 2 10])))
 
 
+(defn standardize [values]
+  (let [m (mean values)
+        s (sqrt (variance values))]
+    (map #(/ (- %
+                m)
+             s)
+         values)))
+
+
+(comment
+  (standardize
+   (flatten (repeat 1000 [3 9]))))
+
 
 (defn to-seq
   "This function transforms returns a 1-element vector containing its input,
@@ -543,3 +557,17 @@ only if it has at least min-n-samples elements
 
 
 ;; (matrix-distances)
+
+
+(defn incanter-dataset-to-weka-dataset
+  [name incanter-dataset]
+  (make-dataset name
+                (col-names incanter-dataset)
+                (map vals (:rows incanter-dataset))))
+
+
+(defn weka-dataset-to-incanter-dataset
+  [weka-dataset]
+  (dataset
+   (attribute-names weka-dataset)
+   (map instance-to-map weka-dataset)))
