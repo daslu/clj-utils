@@ -373,6 +373,14 @@ to avoid some LTR/RTL problems in printing."
            ;;               (.getMessage e)
            nil))))
 
+(defn parse-double-or-nil [string]
+  (try (Double/parseDouble string)
+       (catch NumberFormatException e
+         (do
+           ;; (println (str "warning: NumberFormatException "
+           ;;               (.getMessage e)
+           nil))))
+
 
 (defn order [values]
   (map second
