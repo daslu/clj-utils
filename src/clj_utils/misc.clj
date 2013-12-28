@@ -486,6 +486,18 @@ only if it has at least min-n-samples elements
                      (vals row)))
     (:rows adataset))))
 
+(defn filter-all-nonnil-and-nonNaN-and-nonInf [adataset]
+  (to-dataset
+   (filter
+    (fn [row] (every? #(not (or (nil? %)
+                               (and (number? %)
+                                    (Double/isInfinite %))
+                               (and (number? %)
+                                    (Double/isNaN %))))
+                     (vals row)))
+    (:rows adataset))))
+
+
 (defn filter-full [adataset]
   (to-dataset
    (filter #(= (count %)
@@ -571,3 +583,4 @@ only if it has at least min-n-samples elements
   (dataset
    (attribute-names weka-dataset)
    (map instance-to-map weka-dataset)))
+
