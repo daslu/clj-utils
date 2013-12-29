@@ -525,7 +525,7 @@ only if it has at least min-n-samples elements
                                  (fn [elem]
                                    (or (is-a-finite-number elem)
                                        (and elem
-                                            (not number? elem)))))
+                                            (not (number? elem))))))
                         vals))
           (dataset (col-names adataset))
           ;; col-names are necessary here to keep the ordering of row columns.
