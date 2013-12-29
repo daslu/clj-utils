@@ -135,12 +135,13 @@ Try this with diff, meld, ediff, etc. as the tool."
                             (map - x y)))))
 
 
-(defn is-a-number
-  "Check if object x is non-nil and can be cast to a Double other than NaN."
+(defn is-a-finite-number
+  "Check if object x is non-nil and can be cast to a Double other than NaN and Infinitiesy."
   ;; TODO: Handle general types.
    [x]
-  (and (identity x)
-       (not (Double/isNaN x))))
+  (and (number? x)
+       (not (or (Double/isNaN x)
+                (Double/isInfinite x)))))
 
 
 (defn take-all-but
@@ -520,7 +521,12 @@ only if it has at least min-n-samples elements
           :rows
           (filter #(= (count %)
                       num-cols))
-          (filter (comp (partial every? is-a-number) vals))
+          (filter (comp (partial every?
+                                 (fn [elem]
+                                   (or (is-a-finite-number elem)
+                                       (and elem
+                                            (not number? elem)))))
+                        vals))
           (dataset (col-names adataset))
           ;; col-names are necessary here to keep the ordering of row columns.
           )))
