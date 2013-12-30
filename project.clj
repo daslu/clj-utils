@@ -1,4 +1,4 @@
-(defproject daslu/clj-utils "0.1.0-SNAPSHOT"
+(defproject daslu/clj-utils "0.1.1-SNAPSHOT"
   :description "various clojure utility functions"
   :url "http://example.com/FIXME"
   :license {:name "Eclipse Public License"
